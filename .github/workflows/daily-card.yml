@@ -1,0 +1,41 @@
+name: Daily Real Estate Knowledge Card
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  daily-card:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-wqy-microhei
+
+      - name: Install Python dependencies
+        run: pip install Pillow requests
+
+      - name: Run daily card
+        env:
+          WECOM_WEBHOOK_URL: ${{ secrets.WECOM_WEBHOOK_URL }}
+        run: python main.py
+
+      - name: Upload card artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-card
+          path: output/daily_card.png
+          retention-days: 3
